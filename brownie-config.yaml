@@ -1,0 +1,32 @@
+# use Ganache's forked mainnet mode as the default network
+networks:
+  default: development
+  rinkeby:
+    verify: true
+  mainnet-fork-dev:
+    verify: false
+  development:
+    verify: false
+  ganache_local:
+    verify: false
+  harmony:
+    verify: false
+  
+autofetch_sources: true
+
+dotenv: .env
+wallets:
+  from_key: ${PKEY}
+
+# require OpenZepplin Contracts
+dependencies:
+  - OpenZeppelin/openzeppelin-contracts@4.5.0
+  - smartcontractkit/chainlink-brownie-contracts@1.1.1
+
+# path remapping to support OpenZepplin imports with NPM-style path
+compiler:
+  solc:
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.5.0"
+      - "@chainlink=smartcontractkit/chainlink-brownie-contracts@1.1.1"
+
