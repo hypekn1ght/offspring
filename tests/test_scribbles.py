@@ -88,7 +88,6 @@ def test_mint_parameters():
     assert scribbles.loyaltyLedger(3) == 0
 
     # test mint counter
-    assert scribbles.mintCounter(1) == 1
     assert scribbles.getMintCounter(1) == 1
     assert scribbles.mintCounter(2) == 2
     assert scribbles.mintCounter(3) == 1
