@@ -35,7 +35,7 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
   address[] public whitelistedAddresses;
   uint256 public parentMintCap = 4;
   uint256 public parentRentCap = 4;
-  uint256 public parentLoyaltyPercentage = 20;
+  uint256 public parentLoyaltyPercentage = 10;
   uint256 public ownerBalance;
   mapping (uint256 => uint256) public mintCounter;
   mapping (uint256 => uint256) public rentCounter;
@@ -106,8 +106,8 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
       _safeMint(msg.sender, supply + i);
     }
 
-    loyaltyLedger[_scribblesIndex1] += (totalLoyalty/2);
-    loyaltyLedger[_scribblesIndex2] += (totalLoyalty/2);
+    
+    
 
     ownerBalance += (msg.value - totalLoyalty);
 
@@ -116,12 +116,14 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
         mintCounter[_scribblesIndex1] += _mintAmount;
     } else {
         rentCounter[_scribblesIndex1] += _mintAmount;
+        loyaltyLedger[_scribblesIndex1] += totalLoyalty;
     }
     // set mint/rent counter for second scribble parent
     if(scribbleIndex2IsOwned){
         mintCounter[_scribblesIndex2] += _mintAmount;
     } else {
         rentCounter[_scribblesIndex2] += _mintAmount;
+        loyaltyLedger[_scribblesIndex2] += totalLoyalty;
     }
   }
 

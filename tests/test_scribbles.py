@@ -73,19 +73,19 @@ def test_mint_parameters():
     with pytest.raises(exceptions.VirtualMachineError):
         scribbles.mint(1, 1, 2, {"from": minter1, "value": Web3.toWei(0.9, "ether")})
     
-    # minter 1 minting 1 renting index 2
+    # minter 1 minting 1 owns index 1 renting index 2
     scribbles.mint(1, 1, 2, {"from": minter1, "value": Web3.toWei(1, "ether")})
 
-    # minter 2 minting 2 renting index 1
+    # minter 2 minting 2 owns index 2 renting index 1
     scribbles.mint(2, 2, 1, {"from": minter2, "value": Web3.toWei(2, "ether")})
 
-    # minter 3 minting 1 renting index 2
+    # minter 3 minting 1 owns index 3 renting index 2
     scribbles.mint(1, 3, 2, {"from": minter3, "value": Web3.toWei(1, "ether")})
 
     # test loyalty
-    assert scribbles.loyaltyLedger(2) == Web3.toWei(0.4, "ether")
-    assert scribbles.loyaltyLedger(1) == Web3.toWei(0.3, "ether")
-    assert scribbles.loyaltyLedger(3) == Web3.toWei(0.1, "ether")
+    assert scribbles.loyaltyLedger(2) == Web3.toWei(0.2, "ether")
+    assert scribbles.loyaltyLedger(1) == Web3.toWei(0.2, "ether")
+    assert scribbles.loyaltyLedger(3) == 0
 
     # test mint counter
     assert scribbles.mintCounter(1) == 1
