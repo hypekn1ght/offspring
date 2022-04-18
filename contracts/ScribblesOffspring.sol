@@ -16,6 +16,7 @@ NFT minters can use this contract to mint NFTs at a cost set by the owner. Owner
  */
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -41,7 +42,7 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
   mapping (uint256 => uint256) public rentCounter;
   mapping (uint256 => uint256) public loyaltyLedger; // loyalty ledger for each NFT (in GWEI)
   address public parentContractAddress;
-
+  IERC721Enumerable public parentContract;
 
   constructor(
     string memory _name,
@@ -49,8 +50,8 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
     string memory _initBaseURI,
     string memory _initNotRevealedUri,
     address contractAddress
-  ) ERC721(_name, _symbol) {
-    parentContractAddress = contractAddress;
+  ) ERC721(_name, _symbol) { 
+    parentContract = IERC721Enumerable(contractAddress);
     setBaseURI(_initBaseURI);
     setNotRevealedURI(_initNotRevealedUri);
   }
@@ -60,7 +61,6 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
     uint256 supply = totalSupply();
     bool scribbleIndex1IsOwned;
     bool scribbleIndex2IsOwned;
-    IERC721 parentContract = IERC721(parentContractAddress);
     uint256 totalLoyalty = msg.value * parentLoyaltyPercentage / 100;
 
     require(!paused);
@@ -105,9 +105,6 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
     for (uint256 i = 1; i <= _mintAmount; i++) {
       _safeMint(msg.sender, supply + i);
     }
-
-    
-    
 
     ownerBalance += (msg.value - totalLoyalty);
 
@@ -213,6 +210,10 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
     return rentCounter[_index];
   }
 
+  function getParentLoyalty(uint256 _index) view public returns(uint256) {
+    return loyaltyLedger[_index];
+  }
+
   function setParentLoyalty(uint256 _loyaltyPercentage) public onlyOwner {
       parentLoyaltyPercentage = _loyaltyPercentage;
   }
@@ -225,6 +226,12 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
   //after the mint, the owner can call this function to collect funds.
   function withdraw() public payable onlyOwner {
     (bool os, ) = payable(owner()).call{value: ownerBalance}("");
+    require(os);
+  }
+
+  function loyaltyWithdraw(uint256 _index) public payable {
+    require(parentContract.ownerOf(_index) == msg.sender, "message sender doesn't own selected NFT");
+    (bool os, ) = payable(msg.sender).call{value: loyaltyLedger[_index]}("");
     require(os);
   }
 }
