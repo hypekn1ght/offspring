@@ -19,15 +19,16 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
-contract ScribblesOffspring is ERC721Enumerable, Ownable {
+contract ScribblesOffspring is ERC721Enumerable, Ownable, ReentrancyGuard {
   using Strings for uint256;
 
   string baseURI; // this is the URI pointing to the real NFT arts on IPFS
   string public baseExtension = ".json";
   uint256 public cost = 1 ether; // This is the initial price set by the owner to mint each NFT.
-  uint256 public maxSupply = 10000; // Total number of NFT that are available to mint.
+  uint256 public maxSupply = 4096; // Total number of NFT that are available to mint.
   uint256 public maxMintAmount = 3; // The max amount of NFTs that can be mint at a time.
   bool public paused = false; // circuit breaker. The owner can pause the contract from executing important functions during emergency.
   bool public revealed = false; // if the NFT project has been revealed.
@@ -106,21 +107,22 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
       _safeMint(msg.sender, supply + i);
     }
 
-    ownerBalance += (msg.value - totalLoyalty);
-
     // set mint/rent counter for first scribble parent 
-    if (scribbleIndex1IsOwned){
+    if (scribbleIndex1IsOwned && scribbleIndex2IsOwned){
         mintCounter[_scribblesIndex1] += _mintAmount;
-    } else {
-        rentCounter[_scribblesIndex1] += _mintAmount;
-        loyaltyLedger[_scribblesIndex1] += totalLoyalty;
-    }
-    // set mint/rent counter for second scribble parent
-    if(scribbleIndex2IsOwned){
         mintCounter[_scribblesIndex2] += _mintAmount;
-    } else {
-        rentCounter[_scribblesIndex2] += _mintAmount;
-        loyaltyLedger[_scribblesIndex2] += totalLoyalty;
+        ownerBalance += msg.value;
+    } else if(scribbleIndex1IsOwned || scribbleIndex2IsOwned) {
+        if(scribbleIndex1IsOwned) {
+          mintCounter[_scribblesIndex1] += _mintAmount;
+          rentCounter[_scribblesIndex2] += _mintAmount;
+          loyaltyLedger[_scribblesIndex2] += totalLoyalty;
+        } else {
+          mintCounter[_scribblesIndex2] += _mintAmount;
+          rentCounter[_scribblesIndex1] += _mintAmount;
+          loyaltyLedger[_scribblesIndex1] += totalLoyalty;
+        }
+        ownerBalance += (msg.value - totalLoyalty);
     }
   }
 
@@ -224,14 +226,16 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable {
   }
 
   //after the mint, the owner can call this function to collect funds.
-  function withdraw() public payable onlyOwner {
+  function withdraw() public payable onlyOwner nonReentrant {
     (bool os, ) = payable(owner()).call{value: ownerBalance}("");
     require(os);
+    ownerBalance = 0;
   }
 
-  function loyaltyWithdraw(uint256 _index) public payable {
+  function loyaltyWithdraw(uint256 _index) public payable nonReentrant {
     require(parentContract.ownerOf(_index) == msg.sender, "message sender doesn't own selected NFT");
     (bool os, ) = payable(msg.sender).call{value: loyaltyLedger[_index]}("");
     require(os);
+    loyaltyLedger[_index] = 0;
   }
 }

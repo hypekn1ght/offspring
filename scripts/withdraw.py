@@ -8,6 +8,6 @@ def main():
 
 def withdraw():
     account = get_account()
-    scribbles = ScribblesOffspring[-1]
+    scribbles = ScribblesOffspring.at("0x11c464f746D2F84023C8488D2b57473925FA7A07")
     scribbles.withdraw({ "from": account, "gas_price": "30 gwei" })
     print(f"scribbles details : {scribbles}")
