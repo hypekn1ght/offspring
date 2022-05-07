@@ -96,7 +96,6 @@ contract ScribblesOffspring is ERC721Enumerable, Ownable, ReentrancyGuard {
         require(rentCounter[_scribblesIndex2] + _mintAmount <= parentRentCap, "after tx, rent capacity is exceeded for Parent 2");
     }
 
-
     // mint cost check
     if (msg.sender != owner()) {
       require(msg.value >= cost * _mintAmount, "Need to attach sufficient funds");

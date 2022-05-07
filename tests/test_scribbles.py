@@ -14,7 +14,7 @@ from brownie import (
 from web3 import Web3
 import pytest
 
-LOYALTY_PERCENTAGE = 20
+LOYALTY_PERCENTAGE = 10
 
 def test_deploy():
     account = get_account()
