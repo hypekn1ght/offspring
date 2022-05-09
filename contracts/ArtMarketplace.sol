@@ -90,12 +90,14 @@ contract ArtMarketplace {
         HasTransferApproval(tokenId, isParent)
         returns (uint256)
     {
-        if(isParent) {
+        if (isParent) {
             require(!activeParentItems[tokenId], "Item is already up for sale");
         } else {
-            require(!activeScribblesItems[tokenId], "Item is already up for sale");
+            require(
+                !activeScribblesItems[tokenId],
+                "Item is already up for sale"
+            );
         }
-        
 
         uint256 newItemId = itemsForSale.length;
         itemsForSale.push(
@@ -113,7 +115,6 @@ contract ArtMarketplace {
         } else {
             activeScribblesItems[tokenId] = true;
         }
-        
 
         assert(itemsForSale[newItemId].id == newItemId);
         emit itemAddedForSale(newItemId, tokenId, price, isParent);
@@ -128,6 +129,11 @@ contract ArtMarketplace {
     {
         require(msg.sender != itemsForSale[id].seller);
         itemsForSale[id].isConcluded = true;
+        if (itemsForSale[id].isParent) {
+            activeParentItems[itemsForSale[id].tokenId] = false;
+        } else {
+            activeScribblesItems[itemsForSale[id].tokenId] = false;
+        }
         emit saleCancelled(id, msg.sender, itemsForSale[id].isParent);
     }
 
@@ -142,7 +148,7 @@ contract ArtMarketplace {
         require(msg.sender != itemsForSale[id].seller);
 
         itemsForSale[id].isConcluded = true;
-        
+
         if (itemsForSale[id].isParent) {
             activeParentItems[itemsForSale[id].tokenId] = false;
             parent.safeTransferFrom(
@@ -161,11 +167,15 @@ contract ArtMarketplace {
 
         itemsForSale[id].seller.transfer(msg.value);
 
-        emit itemSold(id, msg.sender, itemsForSale[id].price, itemsForSale[id].isParent);
+        emit itemSold(
+            id,
+            msg.sender,
+            itemsForSale[id].price,
+            itemsForSale[id].isParent
+        );
     }
 
     function totalItemsForSale() external view returns (uint256) {
         return itemsForSale.length;
     }
-
 }
