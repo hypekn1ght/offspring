@@ -13,7 +13,8 @@ contract ArtMarketplace {
         uint256 tokenId;
         address payable seller;
         uint256 price;
-        bool isSold;
+        // set to false when listing is initiated, true when listing is cancelled or sold
+        bool isConcluded;
         bool isParent;
     }
 
@@ -28,6 +29,7 @@ contract ArtMarketplace {
         bool isParent
     );
     event itemSold(uint256 id, address buyer, uint256 price, bool isParent);
+    event saleCancelled(uint256 id, address seller, bool isParent);
 
     constructor(ScribblesOffspring _token, address _parentAddress) {
         token = _token;
@@ -74,7 +76,7 @@ contract ArtMarketplace {
     }
 
     modifier IsForSale(uint256 id) {
-        require(!itemsForSale[id].isSold, "Item is already sold");
+        require(!itemsForSale[id].isConcluded, "Item is already sold");
         _;
     }
 
@@ -102,7 +104,7 @@ contract ArtMarketplace {
                 tokenId: tokenId,
                 seller: payable(msg.sender),
                 price: price,
-                isSold: false,
+                isConcluded: false,
                 isParent: isParent
             })
         );
@@ -118,6 +120,17 @@ contract ArtMarketplace {
         return newItemId;
     }
 
+    function cancelListing(uint256 id)
+        external
+        ItemExists(id)
+        IsForSale(id)
+        HasTransferApproval(itemsForSale[id].tokenId, itemsForSale[id].isParent)
+    {
+        require(msg.sender != itemsForSale[id].seller);
+        itemsForSale[id].isConcluded = true;
+        emit saleCancelled(id, msg.sender, itemsForSale[id].isParent);
+    }
+
     function buyItem(uint256 id)
         external
         payable
@@ -128,7 +141,7 @@ contract ArtMarketplace {
         require(msg.value >= itemsForSale[id].price, "Not enough funds sent");
         require(msg.sender != itemsForSale[id].seller);
 
-        itemsForSale[id].isSold = true;
+        itemsForSale[id].isConcluded = true;
         
         if (itemsForSale[id].isParent) {
             activeParentItems[itemsForSale[id].tokenId] = false;
