@@ -127,7 +127,7 @@ contract ArtMarketplace {
         IsForSale(id)
         HasTransferApproval(itemsForSale[id].tokenId, itemsForSale[id].isParent)
     {
-        require(msg.sender != itemsForSale[id].seller);
+        require(msg.sender == itemsForSale[id].seller);
         itemsForSale[id].isConcluded = true;
         if (itemsForSale[id].isParent) {
             activeParentItems[itemsForSale[id].tokenId] = false;
@@ -177,5 +177,9 @@ contract ArtMarketplace {
 
     function totalItemsForSale() external view returns (uint256) {
         return itemsForSale.length;
+    }
+
+    function listingConcluded(uint256 id) external view returns (bool) {
+        return itemsForSale[id].isConcluded;
     }
 }

@@ -129,6 +129,36 @@ def test_buying():
 
     assert scribbles.balanceOf(minter2) == 3
 
+def test_cancel():
+
+    minter1 = get_account(index=1)
+    minter2 = get_account(index=2)
+    minter3 = get_account(index=3)
+
+    scribbles = ScribblesOffspring[-1]
+    marketplace = ArtMarketplace[-1]
+    parent = ERC721[-1]
+
+    # putting item for sale on index 2
+    parent.approve(marketplace, 3, {"from": minter3})
+    marketplace.putItemForSale(3, Web3.toWei(1, "ether"), True, {"from": minter3})
+
+    # putting item for sale on index 3
+    scribbles.approve(marketplace, 4, {"from": minter3})
+    marketplace.putItemForSale(4, Web3.toWei(1, "ether"), False, {"from": minter3})
+
+    assert marketplace.totalItemsForSale() == 4
+    assert marketplace.listingConcluded(2) is False
+
+    marketplace.cancelListing(2, {"from": minter3})
+
+    assert marketplace.listingConcluded(2) is True
+
+    marketplace.putItemForSale(3, Web3.toWei(1, "ether"), True, {"from": minter3})
+
+
+
+
 
 
 
